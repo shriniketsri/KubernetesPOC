@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: healthcare-dashboard
+  namespace: healthcare
+  labels:
+    app: healthcare-dashboard
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: healthcare-dashboard
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: healthcare-dashboard
+        version: v1
+      annotations:
+        sidecar.istio.io/inject: "true"
+    spec:
+      serviceAccountName: healthcare-dashboard-sa
+      containers:
+      - name: dashboard
+        image: healthcare/healthcare-dashboard:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 4000
+          name: http
+        env:
+        - name: REACT_APP_API_BASE_URL
+          value: ""
+        - name: NODE_ENV
+          value: "production"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 4000
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 4000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 3
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+            - ALL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: healthcare-dashboard
+  namespace: healthcare
+  labels:
+    app: healthcare-dashboard
+spec:
+  type: NodePort
+  ports:
+  - port: 4000
+    targetPort: 4000
+    nodePort: 30004
+    name: http
+  selector:
+    app: healthcare-dashboard
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: healthcare-dashboard-sa
+  namespace: healthcare
+  labels:
+    app: healthcare-dashboard

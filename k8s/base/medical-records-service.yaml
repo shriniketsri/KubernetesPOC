@@ -1,0 +1,127 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: medical-records-service
+  namespace: healthcare
+  labels:
+    app: medical-records-service
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: medical-records-service
+  template:
+    metadata:
+      labels:
+        app: medical-records-service
+        version: v1
+      annotations:
+        sidecar.istio.io/inject: "true"
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "3003"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: medical-records-service-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534  # nobody user
+        fsGroup: 65534
+      containers:
+      - name: medical-records-service
+        image: healthcare/medical-records-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3003
+          name: http
+        env:
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: medical-records-service-config
+              key: PORT
+        - name: GIN_MODE
+          valueFrom:
+            configMapKeyRef:
+              name: medical-records-service-config
+              key: GIN_MODE
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: medical-records-service-config
+              key: DB_NAME
+        - name: MONGO_HOST
+          value: "mongo"
+        - name: MONGO_PORT
+          value: "27017"
+        - name: MONGO_DATABASE
+          value: "medical_records_db"
+        - name: MONGO_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: database-secrets
+              key: mongo-username
+        - name: MONGO_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: database-secrets
+              key: mongo-password
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: jwt-secret-key
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3003
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 3003
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: medical-records-service
+  namespace: healthcare
+  labels:
+    app: medical-records-service
+spec:
+  type: NodePort
+  ports:
+  - port: 3003
+    targetPort: 3003
+    nodePort: 30003
+    name: http
+  selector:
+    app: medical-records-service
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: medical-records-service-sa
+  namespace: healthcare
+  labels:
+    app: medical-records-service

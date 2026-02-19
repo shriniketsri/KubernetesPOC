@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: healthcare
+  labels:
+    name: healthcare
+    istio-injection: enabled
+  annotations:
+    kubernetes.io/managed-by: "healthcare-platform"

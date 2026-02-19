@@ -1,0 +1,37 @@
+# Currently not  being used - 
+#Your browser access is working through two-layer port forwarding:
+
+#WSL Layer: kubectl port-forward commands in your terminals bind services to WSL ports
+#Windows Layer: setup-port-forward.ps1 uses netsh interface portproxy to forward Windows ports to WSL
+#So when you visit http://localhost:3001 in your Windows browser:
+#Windows forwards port 3001 to WSL via netsh proxy
+#WSL has kubectl port-forward binding port 3001 to the patient service
+
+#If you were using NodePort access, the kind-config-nodeport.yaml would:
+
+#Expose specific port ranges (like 30000-32767) on the Kind cluster nodes
+#Allow direct access via http://localhost:30001 etc.
+#Bypass the need for kubectl port-forward commands
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: healthcare-cluster
+nodes:
+- role: control-plane
+  extraPortMappings:
+  - containerPort: 80
+    hostPort: 80
+    protocol: TCP
+  - containerPort: 443
+    hostPort: 443
+    protocol: TCP
+  - containerPort: 30001
+    hostPort: 30001
+    protocol: TCP
+  - containerPort: 30002
+    hostPort: 30002
+    protocol: TCP
+  - containerPort: 30003
+    hostPort: 30003
+    protocol: TCP
+- role: worker
+- role: worker

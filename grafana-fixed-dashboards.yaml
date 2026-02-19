@@ -1,0 +1,314 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: istio-system
+data:
+  healthcare-overview.json: |
+    {
+      "id": null,
+      "uid": "healthcare-overview",
+      "title": "Healthcare Services Overview",
+      "tags": ["healthcare", "microservices"],
+      "style": "dark",
+      "timezone": "browser",
+      "editable": true,
+      "hideControls": false,
+      "graphTooltip": 1,
+      "panels": [
+        {
+          "id": 1,
+          "title": "Request Rate (req/sec)",
+          "type": "stat",
+          "targets": [
+            {
+              "expr": "sum(rate(istio_requests_total{destination_service_namespace=\"healthcare\"}[5m])) by (destination_service_name)",
+              "legendFormat": "{{destination_service_name}}",
+              "refId": "A"
+            }
+          ],
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [],
+              "thresholds": {
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "red", "value": 80}
+                ]
+              },
+              "unit": "reqps"
+            }
+          }
+        },
+        {
+          "id": 2,
+          "title": "Error Rate (%)",
+          "type": "stat",
+          "targets": [
+            {
+              "expr": "sum(rate(istio_requests_total{destination_service_namespace=\"healthcare\",response_code!~\"2..\"}[5m])) / sum(rate(istio_requests_total{destination_service_namespace=\"healthcare\"}[5m])) * 100",
+              "legendFormat": "Error Rate",
+              "refId": "A"
+            }
+          ],
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [],
+              "thresholds": {
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 1},
+                  {"color": "red", "value": 5}
+                ]
+              },
+              "unit": "percent"
+            }
+          }
+        },
+        {
+          "id": 3,
+          "title": "Response Time (P99)",
+          "type": "timeseries",
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.99, sum(rate(istio_request_duration_milliseconds_bucket{destination_service_namespace=\"healthcare\"}[5m])) by (le, destination_service_name))",
+              "legendFormat": "{{destination_service_name}}",
+              "refId": "A"
+            }
+          ],
+          "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8},
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
+            }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [],
+              "thresholds": {
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "red", "value": 80}
+                ]
+              },
+              "unit": "ms"
+            }
+          }
+        },
+        {
+          "id": 4,
+          "title": "Service Health Status",
+          "type": "stat",
+          "targets": [
+            {
+              "expr": "up{job=~\".*healthcare.*\"}",
+              "legendFormat": "{{job}}",
+              "refId": "A"
+            }
+          ],
+          "gridPos": {"h": 6, "w": 24, "x": 0, "y": 16},
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                {"options": {"0": {"text": "DOWN"}}, "type": "value"},
+                {"options": {"1": {"text": "UP"}}, "type": "value"}
+              ],
+              "thresholds": {
+                "steps": [
+                  {"color": "red", "value": null},
+                  {"color": "green", "value": 1}
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "",
+      "refresh": "5s",
+      "schemaVersion": 27,
+      "version": 1
+    }
+  istio-mesh-dashboard.json: |
+    {
+      "id": null,
+      "uid": "istio-mesh-dashboard",
+      "title": "Istio Mesh Dashboard",
+      "tags": ["istio", "mesh"],
+      "style": "dark",
+      "timezone": "browser",
+      "editable": true,
+      "hideControls": false,
+      "graphTooltip": 1,
+      "panels": [
+        {
+          "id": 1,
+          "title": "Global Request Volume",
+          "type": "stat",
+          "targets": [
+            {
+              "expr": "round(sum(rate(istio_requests_total[1m])), 0.001)",
+              "legendFormat": "Requests/sec",
+              "refId": "A"
+            }
+          ],
+          "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps"
+            }
+          }
+        },
+        {
+          "id": 2,
+          "title": "Global Success Rate",
+          "type": "stat",
+          "targets": [
+            {
+              "expr": "sum(rate(istio_requests_total{response_code!~\"5.*\"}[1m])) / sum(rate(istio_requests_total[1m]))",
+              "legendFormat": "Success Rate",
+              "refId": "A"
+            }
+          ],
+          "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "thresholds": {
+                "steps": [
+                  {"color": "red", "value": null},
+                  {"color": "yellow", "value": 0.95},
+                  {"color": "green", "value": 0.99}
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": 3,
+          "title": "4xx Rate",
+          "type": "stat",
+          "targets": [
+            {
+              "expr": "sum(rate(istio_requests_total{response_code=~\"4.*\"}[1m])) / sum(rate(istio_requests_total[1m]))",
+              "legendFormat": "4xx Rate",
+              "refId": "A"
+            }
+          ],
+          "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit"
+            }
+          }
+        },
+        {
+          "id": 4,
+          "title": "5xx Rate",
+          "type": "stat",
+          "targets": [
+            {
+              "expr": "sum(rate(istio_requests_total{response_code=~\"5.*\"}[1m])) / sum(rate(istio_requests_total[1m]))",
+              "legendFormat": "5xx Rate",
+              "refId": "A"
+            }
+          ],
+          "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "thresholds": {
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 0.01},
+                  {"color": "red", "value": 0.05}
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": 5,
+          "title": "Request Volume by Service",
+          "type": "timeseries",
+          "targets": [
+            {
+              "expr": "sum(rate(istio_requests_total{reporter=\"destination\"}[1m])) by (destination_service_name, destination_service_namespace)",
+              "legendFormat": "{{destination_service_namespace}}/{{destination_service_name}}",
+              "refId": "A"
+            }
+          ],
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps"
+            }
+          }
+        },
+        {
+          "id": 6,
+          "title": "Success Rate by Service",
+          "type": "timeseries",
+          "targets": [
+            {
+              "expr": "sum(rate(istio_requests_total{reporter=\"destination\",response_code!~\"5.*\"}[1m])) by (destination_service_name) / sum(rate(istio_requests_total{reporter=\"destination\"}[1m])) by (destination_service_name)",
+              "legendFormat": "{{destination_service_name}}",
+              "refId": "A"
+            }
+          ],
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "min": 0,
+              "max": 1
+            }
+          }
+        }
+      ],
+      "time": {
+        "from": "now-5m",
+        "to": "now"
+      },
+      "refresh": "5s",
+      "schemaVersion": 27,
+      "version": 1
+    }

@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: patient-service-config
+  namespace: healthcare
+data:
+  NODE_ENV: "production"
+  PORT: "3001"
+  LOG_LEVEL: "info"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: appointment-service-config
+  namespace: healthcare
+data:
+  PORT: "3002"
+  PATIENT_SERVICE_URL: "http://patient-service:3001"
+  DEBUG: "false"
+  POSTGRES_HOST: "postgres"
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: "appointment_db"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: medical-records-service-config
+  namespace: healthcare
+data:
+  PORT: "3003"
+  GIN_MODE: "release"
+  DB_NAME: "medical_records_db"

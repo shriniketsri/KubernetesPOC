@@ -1,0 +1,137 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kiali
+  labels:
+    app: kiali
+    version: v1.79.0
+rules:
+- apiGroups: [""]
+  resources:
+  - configmaps
+  - endpoints
+  - nodes
+  - pods
+  - services
+  - namespaces
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups: [""]
+  resources:
+  - pods/log
+  verbs:
+  - get
+  - list
+- apiGroups: [""]
+  resources:
+  - replicationcontrollers
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups: [""]
+  resources:
+  - pods/portforward
+  verbs:
+  - create
+- apiGroups: ["apps"]
+  resources:
+  - deployments
+  - replicasets
+  - daemonsets
+  - statefulsets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups: ["batch"]
+  resources:
+  - cronjobs
+  - jobs
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups: ["config.istio.io"]
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups: ["networking.istio.io"]
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups: ["security.istio.io"]
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups: ["extensions.istio.io"]
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups: ["telemetry.istio.io"]
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups: ["authentication.istio.io"]
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups: ["rbac.istio.io"]
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups: ["extensions", "networking.k8s.io"]
+  resources:
+  - ingresses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups: ["route.openshift.io"]
+  resources:
+  - routes
+  verbs:
+  - get
+  - list
+  - watch
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kiali
+  labels:
+    app: kiali
+    version: v1.79.0
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kiali
+subjects:
+- kind: ServiceAccount
+  name: kiali
+  namespace: istio-system

@@ -1,0 +1,98 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: healthcare-dashboard-gateway
+  namespace: healthcare
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: healthcare-dashboard-vs
+  namespace: healthcare
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - healthcare-dashboard-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /api/patients
+    route:
+    - destination:
+        host: patient-service
+        port:
+          number: 3001
+  - match:
+    - uri:
+        prefix: /api/appointments
+    route:
+    - destination:
+        host: appointment-service
+        port:
+          number: 3002
+  - match:
+    - uri:
+        prefix: /api/medical-records
+    route:
+    - destination:
+        host: medical-records-service
+        port:
+          number: 3003
+  - match:
+    - uri:
+        prefix: /patient/
+    route:
+    - destination:
+        host: patient-service
+        port:
+          number: 3001
+  - match:
+    - uri:
+        prefix: /appointment/
+    route:
+    - destination:
+        host: appointment-service
+        port:
+          number: 3002
+  - match:
+    - uri:
+        prefix: /medical-records/
+    route:
+    - destination:
+        host: medical-records-service
+        port:
+          number: 3003
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: healthcare-dashboard
+        port:
+          number: 4000
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: healthcare-dashboard-dr
+  namespace: healthcare
+spec:
+  host: healthcare-dashboard
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+  subsets:
+  - name: v1
+    labels:
+      version: v1

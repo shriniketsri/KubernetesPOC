@@ -1,0 +1,43 @@
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: external-apis
+  namespace: healthcare
+spec:
+  hosts:
+  - external-api.example.com
+  ports:
+  - number: 443
+    name: https
+    protocol: HTTPS
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: prometheus
+  namespace: healthcare
+spec:
+  hosts:
+  - prometheus.istio-system.svc.cluster.local
+  ports:
+  - number: 9090
+    name: http-prometheus
+    protocol: HTTP
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: external-api-timeout
+  namespace: healthcare
+spec:
+  hosts:
+  - external-api.example.com
+  http:
+  - timeout: 10s
+    route:
+    - destination:
+        host: external-api.example.com

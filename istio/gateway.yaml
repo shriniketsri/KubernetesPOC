@@ -1,0 +1,104 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: healthcare-gateway
+  namespace: healthcare
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - healthcare.local
+    tls:
+      httpsRedirect: true
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    hosts:
+    - healthcare.local
+    tls:
+      mode: SIMPLE
+      credentialName: healthcare-tls-secret
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: healthcare-vs
+  namespace: healthcare
+spec:
+  hosts:
+  - healthcare.local
+  gateways:
+  - healthcare-gateway
+  - mesh
+  http:
+  - match:
+    - uri:
+        prefix: /api/patients
+    route:
+    - destination:
+        host: patient-service.healthcare.svc.cluster.local
+        port:
+          number: 3001
+    timeout: 30s
+    retries:
+      attempts: 3
+      perTryTimeout: 10s
+      retryOn: 5xx,gateway-error,connect-failure,refused-stream
+  - match:
+    - uri:
+        prefix: /api/appointments
+    - uri:
+        prefix: /api/availability
+    route:
+    - destination:
+        host: appointment-service.healthcare.svc.cluster.local
+        port:
+          number: 3002
+    timeout: 30s
+    retries:
+      attempts: 3
+      perTryTimeout: 10s
+      retryOn: 5xx,gateway-error,connect-failure,refused-stream
+  - match:
+    - uri:
+        prefix: /api/medical-records
+    route:
+    - destination:
+        host: medical-records-service.healthcare.svc.cluster.local
+        port:
+          number: 3003
+    timeout: 30s
+    retries:
+      attempts: 3
+      perTryTimeout: 10s
+      retryOn: 5xx,gateway-error,connect-failure,refused-stream
+  - match:
+    - uri:
+        prefix: /health
+    route:
+    - destination:
+        host: patient-service.healthcare.svc.cluster.local
+        port:
+          number: 3001
+      weight: 33
+    - destination:
+        host: appointment-service.healthcare.svc.cluster.local
+        port:
+          number: 3002
+      weight: 33
+    - destination:
+        host: medical-records-service.healthcare.svc.cluster.local
+        port:
+          number: 3003
+      weight: 34
+  - route:
+    - destination:
+        host: patient-service.healthcare.svc.cluster.local
+        port:
+          number: 3001
